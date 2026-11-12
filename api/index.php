@@ -60,3 +60,4 @@ if ($realTarget && strpos($realTarget, $realRoot) === 0 && file_exists($realTarg
     echo '<p><a href="/">Kembali ke Halaman Utama</a></p>';
     echo '</body></html>';
 }
+

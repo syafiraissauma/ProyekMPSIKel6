@@ -3,7 +3,7 @@
   "functions": {
     "api/index.php": {
       "runtime": "vercel-php@0.7.4",
-      "includeFiles": "{config/**,includes/**,auth/**,items/**,transactions/**,categories/**,locations/**,history/**,reports/**,scan/**,settings/**,users/**,index.php,database.sql,setup_database.php}"
+      "includeFiles": "{config/**,includes/**,auth/**,items/**,transactions/**,categories/**,locations/**,history/**,reports/**,scan/**,settings/**,users/**,index.php,database.sql,setup_database.php,database.sqlite}"
     }
   },
   "routes": [
@@ -17,3 +17,4 @@
     }
   ]
 }
+

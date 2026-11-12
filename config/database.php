@@ -39,7 +39,51 @@ function getDbConnection(): PDO {
 
         try {
             $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
+            if (!defined('DB_DRIVER')) define('DB_DRIVER', 'mysql');
         } catch (PDOException $e) {
+            // Fallback otomatis ke SQLite jika MySQL tidak tersedia (misal di Vercel tanpa cloud DB)
+            $sqliteFile = dirname(__DIR__) . '/database.sqlite';
+            if (file_exists($sqliteFile) || is_dir('/tmp') || getenv('VERCEL')) {
+                try {
+                    $targetSqlite = $sqliteFile;
+                    // Pada Vercel (read-only filesystem), salin ke /tmp agar dapat membaca & menulis
+                    if (getenv('VERCEL') || !@is_writable($sqliteFile)) {
+                        $tmpSqlite = '/tmp/kel6mpsi_database.sqlite';
+                        if (!file_exists($tmpSqlite) && file_exists($sqliteFile)) {
+                            @copy($sqliteFile, $tmpSqlite);
+                        }
+                        if (file_exists($tmpSqlite)) {
+                            $targetSqlite = $tmpSqlite;
+                        }
+                    }
+
+                    if (file_exists($targetSqlite)) {
+                        $sqlitePdo = new PDO('sqlite:' . $targetSqlite, null, null, [
+                            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                            PDO::ATTR_EMULATE_PREPARES   => false,
+                        ]);
+
+                        // Daftarkan fungsi helper MySQL agar kompatibel dengan SQLite
+                        $sqlitePdo->sqliteCreateFunction('NOW', function() {
+                            return date('Y-m-d H:i:s');
+                        });
+                        $sqlitePdo->sqliteCreateFunction('CURDATE', function() {
+                            return date('Y-m-d');
+                        });
+                        $sqlitePdo->sqliteCreateFunction('CONCAT', function(...$args) {
+                            return implode('', $args);
+                        });
+
+                        if (!defined('DB_DRIVER')) define('DB_DRIVER', 'sqlite');
+                        $pdo = $sqlitePdo;
+                        return $pdo;
+                    }
+                } catch (Exception $sqliteEx) {
+                    // Fallback SQLite gagal, tampilkan error MySQL asli
+                }
+            }
+
             // Tampilan ramah jika database belum diimpor atau MySQL belum menyala
             http_response_code(500);
             ?>
