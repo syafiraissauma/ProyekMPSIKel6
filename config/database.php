@@ -2,13 +2,26 @@
 /**
  * Database Connection Configuration
  * Menggunakan PDO untuk keamanan dan prepared statement
+ * Support Railway environment variables (production) dan XAMPP lokal
  */
 
-define('DB_HOST', 'localhost');
-define('DB_PORT', '3306');
-define('DB_NAME', 'kel6mpsi_inventaris');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+// Railway menyediakan MYSQL_URL atau variabel terpisah
+// Coba baca dari DATABASE_URL (Railway MySQL format) dulu
+if (getenv('DATABASE_URL')) {
+    $url = parse_url(getenv('DATABASE_URL'));
+    define('DB_HOST', $url['host']);
+    define('DB_PORT', isset($url['port']) ? (string)$url['port'] : '3306');
+    define('DB_NAME', ltrim($url['path'], '/'));
+    define('DB_USER', $url['user']);
+    define('DB_PASS', isset($url['pass']) ? $url['pass'] : '');
+} else {
+    // Fallback ke env var individual Railway atau default XAMPP lokal
+    define('DB_HOST', getenv('MYSQLHOST')     ?: 'localhost');
+    define('DB_PORT', getenv('MYSQLPORT')     ?: '3306');
+    define('DB_NAME', getenv('MYSQLDATABASE') ?: 'kel6mpsi_inventaris');
+    define('DB_USER', getenv('MYSQLUSER')     ?: 'root');
+    define('DB_PASS', getenv('MYSQLPASSWORD') ?: '');
+}
 
 function getDbConnection(): PDO {
     static $pdo = null;

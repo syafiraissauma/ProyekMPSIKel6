@@ -180,3 +180,4 @@ KEL6MPSI/
 ## 📄 Lisensi
 
 Proyek ini dibuat untuk keperluan akademik — Kelompok 6 MPSI.
+
