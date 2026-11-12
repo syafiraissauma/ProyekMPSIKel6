@@ -1,0 +1,33 @@
+# === OS Files ===
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# === Editor / IDE ===
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# === PHP / Composer ===
+/vendor/
+composer.lock
+
+# === Logs & Cache ===
+*.log
+/logs/
+/cache/
+/tmp/
+
+# === Sensitive / Local Config ===
+# Uncomment baris berikut jika Anda mengganti konfigurasi database dari default:
+# config/database.php
+
+# === Upload / Generated Files ===
+/uploads/
+/qrcodes/
+
+# === Backup Files ===
+*.sql.bak
+*.bak
+*.backup
