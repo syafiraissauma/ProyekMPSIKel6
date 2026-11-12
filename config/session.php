@@ -7,6 +7,10 @@ require_once __DIR__ . '/app.php';
 
 // Konfigurasi Keamanan Session
 if (session_status() === PHP_SESSION_NONE) {
+    // Pada serverless seperti Vercel, filesystem bersifat read-only kecuali /tmp
+    if (getenv('VERCEL') || (function_exists('session_save_path') && !@is_writable(session_save_path()))) {
+        @session_save_path('/tmp');
+    }
     ini_set('session.cookie_httponly', 1);
     ini_set('session.use_only_cookies', 1);
     ini_set('session.cookie_samesite', 'Lax');

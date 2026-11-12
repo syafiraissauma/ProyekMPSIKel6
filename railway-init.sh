@@ -25,3 +25,4 @@ fi
 
 echo "Memulai Apache..."
 apache2-foreground
+

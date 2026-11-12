@@ -5,22 +5,22 @@
  * Support Railway environment variables (production) dan XAMPP lokal
  */
 
-// Railway menyediakan MYSQL_URL atau variabel terpisah
-// Coba baca dari DATABASE_URL (Railway MySQL format) dulu
-if (getenv('DATABASE_URL')) {
-    $url = parse_url(getenv('DATABASE_URL'));
-    define('DB_HOST', $url['host']);
+// Dukungan Environment Variables untuk Vercel, Railway, Cloud MySQL, dan XAMPP lokal
+$dbUrl = getenv('DATABASE_URL') ?: getenv('MYSQL_URL');
+if ($dbUrl) {
+    $url = parse_url($dbUrl);
+    define('DB_HOST', $url['host'] ?? 'localhost');
     define('DB_PORT', isset($url['port']) ? (string)$url['port'] : '3306');
-    define('DB_NAME', ltrim($url['path'], '/'));
-    define('DB_USER', $url['user']);
-    define('DB_PASS', isset($url['pass']) ? $url['pass'] : '');
+    define('DB_NAME', isset($url['path']) ? ltrim($url['path'], '/') : 'kel6mpsi_inventaris');
+    define('DB_USER', $url['user'] ?? 'root');
+    define('DB_PASS', $url['pass'] ?? '');
 } else {
-    // Fallback ke env var individual Railway atau default XAMPP lokal
-    define('DB_HOST', getenv('MYSQLHOST')     ?: 'localhost');
-    define('DB_PORT', getenv('MYSQLPORT')     ?: '3306');
-    define('DB_NAME', getenv('MYSQLDATABASE') ?: 'kel6mpsi_inventaris');
-    define('DB_USER', getenv('MYSQLUSER')     ?: 'root');
-    define('DB_PASS', getenv('MYSQLPASSWORD') ?: '');
+    // Fallback ke env var individual (DB_* atau MYSQL*) atau default XAMPP lokal
+    define('DB_HOST', getenv('DB_HOST')     ?: getenv('MYSQLHOST')     ?: 'localhost');
+    define('DB_PORT', getenv('DB_PORT')     ?: getenv('MYSQLPORT')     ?: '3306');
+    define('DB_NAME', getenv('DB_NAME')     ?: getenv('DB_DATABASE') ?: getenv('MYSQLDATABASE') ?: 'kel6mpsi_inventaris');
+    define('DB_USER', getenv('DB_USER')     ?: getenv('DB_USERNAME') ?: getenv('MYSQLUSER')     ?: 'root');
+    define('DB_PASS', getenv('DB_PASSWORD') ?: getenv('DB_PASS')     ?: getenv('MYSQLPASSWORD') ?: '');
 }
 
 function getDbConnection(): PDO {
@@ -33,6 +33,9 @@ function getDbConnection(): PDO {
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES   => false,
         ];
+        if (defined('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT') && DB_HOST !== 'localhost' && DB_HOST !== '127.0.0.1') {
+            $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+        }
 
         try {
             $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);

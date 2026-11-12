@@ -4,11 +4,21 @@
  * Mengimpor database.sql secara otomatis dengan 1-klik
  */
 
-define('DB_HOST', 'localhost');
-define('DB_PORT', '3306');
-define('DB_NAME', 'kel6mpsi_inventaris');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+$dbUrl = getenv('DATABASE_URL') ?: getenv('MYSQL_URL');
+if ($dbUrl) {
+    $url = parse_url($dbUrl);
+    define('DB_HOST', $url['host'] ?? 'localhost');
+    define('DB_PORT', isset($url['port']) ? (string)$url['port'] : '3306');
+    define('DB_NAME', isset($url['path']) ? ltrim($url['path'], '/') : 'kel6mpsi_inventaris');
+    define('DB_USER', $url['user'] ?? 'root');
+    define('DB_PASS', $url['pass'] ?? '');
+} else {
+    define('DB_HOST', getenv('DB_HOST')     ?: getenv('MYSQLHOST')     ?: 'localhost');
+    define('DB_PORT', getenv('DB_PORT')     ?: getenv('MYSQLPORT')     ?: '3306');
+    define('DB_NAME', getenv('DB_NAME')     ?: getenv('DB_DATABASE') ?: getenv('MYSQLDATABASE') ?: 'kel6mpsi_inventaris');
+    define('DB_USER', getenv('DB_USER')     ?: getenv('DB_USERNAME') ?: getenv('MYSQLUSER')     ?: 'root');
+    define('DB_PASS', getenv('DB_PASSWORD') ?: getenv('DB_PASS')     ?: getenv('MYSQLPASSWORD') ?: '');
+}
 
 if (!function_exists('e')) {
     function e(?string $string): string {
@@ -22,10 +32,19 @@ $tablesCreated = [];
 
 if (isset($_POST['install']) || php_sapi_name() === 'cli') {
     try {
-        // Koneksi awal tanpa nama database
-        $pdo = new PDO("mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";charset=utf8mb4", DB_USER, DB_PASS, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-        ]);
+        // Opsi koneksi PDO
+        $options = [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        ];
+        if (defined('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT') && DB_HOST !== 'localhost' && DB_HOST !== '127.0.0.1') {
+            $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+        }
+
+        try {
+            $pdo = new PDO("mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";charset=utf8mb4", DB_USER, DB_PASS, $options);
+        } catch (Exception $e) {
+            $pdo = new PDO("mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";charset=utf8mb4", DB_USER, DB_PASS, $options);
+        }
 
         $sqlFile = __DIR__ . '/database.sql';
         if (!file_exists($sqlFile)) {

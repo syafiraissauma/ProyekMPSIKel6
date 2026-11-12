@@ -26,3 +26,4 @@ Header always set Referrer-Policy "strict-origin-when-cross-origin"
     Order allow,deny
     Deny from all
 </FilesMatch>
+
